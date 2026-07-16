@@ -99,5 +99,5 @@ Current Sharktech template is v1.13.5
 Upgrade to 1.13.6 via https://docs.siderolabs.com/talos/v1.13/configure-your-talos-cluster/lifecycle-management/upgrading-talos#upgrade-api-changes-in-talos-v1-13
 
 ```
-talosctl upgrade --nodes 192.168.50.10 --image ghcr.io/siderolabs/installer:v1.13.6
+talosctl upgrade --nodes 192.168.50.10 --reboot-mode force
 ```
