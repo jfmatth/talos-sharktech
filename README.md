@@ -41,3 +41,63 @@ Provision a Talos Control Planeon the vNetLAS network
 - No public IP
 - Private network, 192.168.50.10
 
+From the public VM...  
+
+Following the instructions here - https://docs.siderolabs.com/talos/v1.13/getting-started/getting-started#step-3-store-your-node-ip-addresses-in-a-variable
+
+```
+export CONTROL_PLANE_IP=192.168.50.10
+export CLUSTER_NAME=talos-sharktech
+export DISK_NAME=sda
+talosctl gen config $CLUSTER_NAME https://$CONTROL_PLANE_IP:6443 \
+    --install-disk /dev/$DISK_NAME \
+    --config-patch @patch-static.yaml \
+    --config-patch @patch-resolver.yaml \
+    --config-patch @patch-hostname.yaml \
+    --force
+```
+
+Apply the config to the running VM
+```
+talosctl apply-config --insecure \
+    --nodes $CONTROL_PLANE_IP \
+    --file controlplane.yaml
+```
+
+Set the endpoints
+```
+talosctl --talosconfig=./talosconfig config endpoints $CONTROL_PLANE_IP
+```
+
+Bootstrap
+```
+talosctl bootstrap --nodes $CONTROL_PLANE_IP --talosconfig=./talosconfig
+```
+
+Watch the dashboard until all signs show "READY"
+```
+talosctl dashboard --nodes $CONTROL_PLANE_IP --talosconfig=./talosconfig
+```
+
+Check health just to be sure
+```
+talosctl --nodes $CONTROL_PLANE_IP --talosconfig=./talosconfig health
+```
+
+Save all context stuff
+```
+talosctl config add talos-sharktech
+cp talosconfig ~/.talos/config
+talosctl config endpoint $CONTROL_PLANE_IP
+talosctl config node $CONTROL_PLANE_IP
+talosctl config contexts
+```
+
+## Talos Upgrades
+Current Sharktech template is v1.13.5
+
+Upgrade to 1.13.6 via https://docs.siderolabs.com/talos/v1.13/configure-your-talos-cluster/lifecycle-management/upgrading-talos#upgrade-api-changes-in-talos-v1-13
+
+```
+talosctl upgrade --nodes 192.168.50.10 --image ghcr.io/siderolabs/installer:v1.13.6
+```

@@ -1,0 +1,15 @@
+apiVersion: v1alpha1
+kind: LinkConfig
+name: ens18
+addresses:
+    - address: 192.168.50.10/24 # IP address to be assigned to the link.
+routes:
+    - gateway: 192.168.50.1
+---
+apiVersion: v1alpha1
+kind: LinkConfig
+name: eth0
+addresses:
+    - address: 192.168.50.10/24 # IP address to be assigned to the link.
+routes:
+    - gateway: 192.168.50.1
