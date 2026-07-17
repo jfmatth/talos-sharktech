@@ -45,7 +45,7 @@ From the public VM...
 
 Following the instructions here - https://docs.siderolabs.com/talos/v1.13/getting-started/getting-started#step-3-store-your-node-ip-addresses-in-a-variable
 
-```
+<!-- ```
 export CONTROL_PLANE_IP=192.168.50.10
 export CLUSTER_NAME=talos-sharktech
 export DISK_NAME=sda
@@ -54,6 +54,15 @@ talosctl gen config $CLUSTER_NAME https://$CONTROL_PLANE_IP:6443 \
     --config-patch @patch-static.yaml \
     --config-patch @patch-resolver.yaml \
     --config-patch @patch-hostname.yaml \
+    --force
+``` -->
+```
+export CONTROL_PLANE_IP=192.168.50.10
+export CLUSTER_NAME=talos-sharktech
+export DISK_NAME=sda
+talosctl gen config $CLUSTER_NAME https://$CONTROL_PLANE_IP:6443 \
+    --install-disk /dev/$DISK_NAME \
+    --config-patch-control-plane @cp-patch-network.yaml \
     --force
 ```
 
@@ -64,24 +73,23 @@ talosctl apply-config --insecure \
     --file controlplane.yaml
 ```
 
-Set the endpoints
+
+Endpoints / bootstrap / dashboard / healthcheck
 ```
 talosctl --talosconfig=./talosconfig config endpoints $CONTROL_PLANE_IP
-```
-
-Bootstrap
-```
 talosctl bootstrap --nodes $CONTROL_PLANE_IP --talosconfig=./talosconfig
-```
-
-Watch the dashboard until all signs show "READY"
-```
 talosctl dashboard --nodes $CONTROL_PLANE_IP --talosconfig=./talosconfig
+talosctl --nodes $CONTROL_PLANE_IP --talosconfig=./talosconfig health
 ```
 
-Check health just to be sure
+Set Hostname
 ```
-talosctl --nodes $CONTROL_PLANE_IP --talosconfig=./talosconfig health
+talosctl patch machineconfig --talosconfig=./talosconfig --nodes $CONTROL_PLANE_IP -p @cp-patch-hostname.yaml
+```
+
+Fix DNS - Use host DNS instead of ???
+```
+talosctl patch machineconfig -n 192.168.50.10 --patch @dns-fix-patch.yaml
 ```
 
 Save all context stuff
@@ -91,6 +99,15 @@ cp talosconfig ~/.talos/config
 talosctl config endpoint $CONTROL_PLANE_IP
 talosctl config node $CONTROL_PLANE_IP
 talosctl config contexts
+```
+
+### Nodes
+
+Node 1
+```
+talosctl apply-config --insecure --nodes 192.168.50.11 --file worker.yaml
+talosctl patch machineconfig --talosconfig=./talosconfig --nodes 192.168.50.11 -p @nd1-patch-network.yaml
+talosctl patch machineconfig --talosconfig=./talosconfig --nodes 192.168.50.11 -p @nd1-patch-hostname.yaml
 ```
 
 ## Talos Upgrades
