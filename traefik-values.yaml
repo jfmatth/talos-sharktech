@@ -39,14 +39,6 @@ gatewayClass:
   enabled: true
   name: traefik
 
-service:
-  type: NodePort # Use NodePort so your external Linux VM can reach it
-  ports:
-    web:
-      nodePort: 30080
-    websecure:
-      nodePort: 30443
-
 # Optional: Enable logs and metrics
 # logs:
 #   general:
@@ -70,3 +62,11 @@ service:
 #         names:
 #           # User-Agent: redact
 #           Content-Type: keep
+
+tolerations:
+  - key: "node-role.kubernetes.io/control-plane"
+    operator: "Exists"
+    effect: "NoSchedule"
+  - key: "node-role.kubernetes.io/master"
+    operator: "Exists"
+    effect: "NoSchedule"

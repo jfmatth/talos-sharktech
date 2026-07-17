@@ -20,3 +20,13 @@ machine:
     - 170.178.191.66
     - 170.178.191.67
     - 1.1.1.1
+
+cluster:
+  # 
+  # Cilium
+  # 
+  network:
+    cni:
+      name: none
+  # proxy:
+  #   disabled: true
