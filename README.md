@@ -130,3 +130,8 @@ Upgrade to 1.13.6 via https://docs.siderolabs.com/talos/v1.13/configure-your-tal
 ```
 talosctl upgrade --nodes 192.168.50.10 --reboot-mode force
 ```
+
+## Talos resets on ST
+```
+talosctl reset --system-labels-to-wipe EPHEMERAL,STATE --reboot --graceful=false -n %1
+```
