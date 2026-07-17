@@ -99,6 +99,22 @@ cp talosconfig ~/.talos/config
 talosctl config endpoint $CONTROL_PLANE_IP
 talosctl config node $CONTROL_PLANE_IP
 talosctl config contexts
+talosctl kubeconfig -f ~/.kube/config
+```
+
+### Traefik
+https://docs.siderolabs.com/kubernetes-guides/advanced-guides/deploy-traefik#deploy-traefik-as-a-gateway-api
+
+```
+helm repo add traefik https://traefik.github.io/charts
+helm repo update
+```
+
+```
+kubectl apply -f https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.5.1/standard-install.yaml
+kubectl apply -f traefik-namespace.yaml
+helm install traefik traefik/traefik -f traefik.yaml -n traefik
+kubectl apply -f traefik-gateway.yaml
 ```
 
 ### Nodes
