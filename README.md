@@ -56,23 +56,30 @@ Change ``DEFAULT_FORWARD_POLICY="ACCEPT"``
 
 Add the following to the top of ``/etc/ufw/before.rules``
 ```
+
 # NAT table rules
 *nat
+:PREROUTING ACCEPT [0:0]
 :POSTROUTING ACCEPT [0:0]
 
-# Forward traffic from private VMs through the public interface
+# 1. DNAT rule: Forward port 80 to the private VM
+-A PREROUTING -i eth0 -p tcp --dport 80 -j DNAT --to-destination 192.168.50.10:80
+
+# 2. Your existing Masquerade rule (keep this)
 -A POSTROUTING -o eth0 -j MASQUERADE
+
+# Force return traffic by masquerading inbound DNAT traffic
+-A POSTROUTING -d 192.168.50.10 -p tcp --dport 80 -j MASQUERADE
 
 # Commit the changes
 COMMIT
 ```
-
-
-DNAT for 80 and 443
+UFW Rule changes
 ```
-sudo iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 80 -j DNAT --to-destination 192.168.50.10:80
-sudo iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 443 -j DNAT --to-destination 192.168.50.10:443
+sudo ufw route allow proto tcp to 192.168.50.10 port 80
+sudo ufw reload
 ```
+
 
 **Add Talos later**
 
