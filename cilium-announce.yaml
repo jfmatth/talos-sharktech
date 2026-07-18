@@ -9,6 +9,7 @@ spec:
         operator: Exists
   interfaces:
   - ens18
+  - eth0
   externalIPs: true
   loadBalancerIPs: true
 

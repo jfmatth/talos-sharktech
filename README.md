@@ -7,22 +7,68 @@ Sharktech 1x2, Ubuntu 25.10
 ``eth0`` = Public IP  
 ``eth1`` = Private VNET (192.168.50.0/24) 192.168.50.1 (DGW)
 
-## IP Forwarding for DNAT to cluster
+
+## Prerequisits
+Talos
 ```
-sudo nano /etc/sysctl.conf
+curl -sL https://talos.dev/install | sh
 ```
 
-Add 
+Helm
+```
+wget https://get.helm.sh/helm-v4.2.3-linux-amd64.tar.gz && \
+tar xvfz helm-v4.2.3-linux-amd64.tar.gz && \
+sudo install linux-amd64/helm /usr/local/bin/
+```
+
+Cilium
+```
+helm repo add cilium https://helm.cilium.io/
+helm repo update
+```
+
+Kubectl
+```
+curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" && \
+sudo install kubectl /usr/local/bin && \
+rm kubectl 
+```
+
+## IP Forwarding for DNAT to cluster
+```
+sudo nano /etc/sysctl.d/99-bastion.conf
+```
+
 ```
 net.ipv4.ip_forward=1
 ```
 
 Apply
 ```
-sudo sysctl -p
+sudo sysctl --system
 ```
 
-## DNAT for 80 and 443
+NAT and UFW
+```
+sudo nano /etc/default/ufw
+```
+Change ``DEFAULT_FORWARD_POLICY="ACCEPT"``
+
+Add the following to the top of ``/etc/ufw/before.rules``
+```
+# NAT table rules
+*nat
+:POSTROUTING ACCEPT [0:0]
+
+# Forward traffic from private VMs through the public interface
+-A POSTROUTING -o eth0 -j MASQUERADE
+
+# Commit the changes
+COMMIT
+```
+
+
+DNAT for 80 and 443
 ```
 sudo iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 80 -j DNAT --to-destination 192.168.50.10:80
 sudo iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 443 -j DNAT --to-destination 192.168.50.10:443
@@ -93,10 +139,9 @@ talosctl patch machineconfig -n 192.168.50.10 --patch @dns-fix-patch.yaml
 
 Cillium
 ```
-helm install cilium cilium/cilium --namespace kube-system -f cilium.yaml --version 1.18.9
+helm install cilium cilium/cilium --namespace kube-system -f cilium-values.yaml --version 1.18.9
 kubectl apply -f cilium-announce.yaml
 ```
-
 
 ### Traefik
 https://docs.siderolabs.com/kubernetes-guides/advanced-guides/deploy-traefik#deploy-traefik-as-a-gateway-api
