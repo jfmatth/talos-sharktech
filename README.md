@@ -165,7 +165,13 @@ kubectl apply -f https://github.com/kubernetes-sigs/gateway-api/releases/downloa
 kubectl apply -f traefik-namespace.yaml
 helm install traefik traefik/traefik -f traefik-values.yaml -n traefik
 kubectl apply -f traefik-gateway.yaml
+```
 
+Metrics Server
+```
+helm repo add metrics-server https://kubernetes-sigs.github.io/metrics-server/
+helm repo update
+helm upgrade --install metrics-server metrics-server/metrics-server -n kube-system -f ./metrics-server.yaml
 ```
 
 ### Nodes
