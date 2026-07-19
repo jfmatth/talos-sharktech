@@ -1,12 +1,10 @@
 # Talos on SharkTech
 
-## Architecture
-
+**Architecture**
 Sharktech 1x2, Ubuntu 25.10
 
 ``eth0`` = Public IP  
 ``eth1`` = Private VNET (192.168.50.0/24) 192.168.50.1 (DGW)
-
 
 ## Prerequisits
 Talos
@@ -56,7 +54,6 @@ Change ``DEFAULT_FORWARD_POLICY="ACCEPT"``
 
 Add the following to the top of ``/etc/ufw/before.rules``
 ```
-
 # NAT table rules
 *nat
 :PREROUTING ACCEPT [0:0]
@@ -64,24 +61,24 @@ Add the following to the top of ``/etc/ufw/before.rules``
 
 # 1. DNAT rule: Forward port 80 to the private VM
 -A PREROUTING -i eth0 -p tcp --dport 80 -j DNAT --to-destination 192.168.50.10:80
+-A PREROUTING -i eth0 -p tcp --dport 6443 -j DNAT --to-destination 192.168.50.10:6443
 
 # 2. Your existing Masquerade rule (keep this)
 -A POSTROUTING -o eth0 -j MASQUERADE
 
 # Force return traffic by masquerading inbound DNAT traffic
 -A POSTROUTING -d 192.168.50.10 -p tcp --dport 80 -j MASQUERADE
+-A POSTROUTING -d 192.168.50.10 -p tcp --dport 6443 -j MASQUERADE
 
 # Commit the changes
 COMMIT
 ```
+
 UFW Rule changes
 ```
 sudo ufw route allow proto tcp to 192.168.50.10 port 80
 sudo ufw reload
 ```
-
-
-**Add Talos later**
 
 ## Talos
 
@@ -105,6 +102,7 @@ export DISK_NAME=sda
 talosctl gen config $CLUSTER_NAME https://$CONTROL_PLANE_IP:6443 \
     --install-disk /dev/$DISK_NAME \
     --config-patch-control-plane @cp-patch-network.yaml \
+    --config-patch @cp-patch-sans.yaml \
     --force
 ```
 
@@ -134,6 +132,8 @@ talosctl dashboard --nodes $CONTROL_PLANE_IP --talosconfig=./talosconfig
 talosctl --nodes $CONTROL_PLANE_IP --talosconfig=./talosconfig health
 ```
 
+**Dashboard will show everything ready, except the cluster, you need to get Cilium installed**
+
 Set Hostname
 ```
 talosctl patch machineconfig --talosconfig=./talosconfig --nodes $CONTROL_PLANE_IP -p @cp-patch-hostname.yaml
@@ -148,6 +148,7 @@ Cillium
 ```
 helm install cilium cilium/cilium --namespace kube-system -f cilium-values.yaml --version 1.18.9
 kubectl apply -f cilium-announce.yaml
+
 ```
 
 ### Traefik
@@ -156,6 +157,7 @@ https://docs.siderolabs.com/kubernetes-guides/advanced-guides/deploy-traefik#dep
 ```
 helm repo add traefik https://traefik.github.io/charts
 helm repo update
+
 ```
 
 ```
@@ -163,6 +165,7 @@ kubectl apply -f https://github.com/kubernetes-sigs/gateway-api/releases/downloa
 kubectl apply -f traefik-namespace.yaml
 helm install traefik traefik/traefik -f traefik-values.yaml -n traefik
 kubectl apply -f traefik-gateway.yaml
+
 ```
 
 ### Nodes
